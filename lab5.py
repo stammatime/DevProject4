@@ -1,6 +1,9 @@
 import string
 import re
+import numpy
+import pprint
 from sets import Set
+from math import log10, floor
 
 allDics = {}
   
@@ -23,6 +26,9 @@ def main():
       docID += 1
     
 
+  # Create the jaccard similiarity matrix.  Will be (#docs x #docs).
+  simMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
+
   # iterate through all of the documents comparing each one to the others
   # Outer loop gets b1
   for eachDocID in allDics:
@@ -32,6 +38,7 @@ def main():
       b2 = allDics[i]['bigrams']
       #print(b2)
       jaccard = computeJaccard(b1, b2)
+      addToMatrix(simMatrix, eachDocID, i, jaccard)
 
       # # # ADD TO MATRIX[EACHDOCID][I] THE JACCARD VALUE
       # # # THEN 1 FOR MATRIX[EACHDOCID][EACHDOCID]
@@ -39,6 +46,9 @@ def main():
       print(jaccard)
       print('\n\n')
       i += 1
+
+  pp = pprint.PrettyPrinter(depth=7)
+  pp.pprint(simMatrix)
 
 
 def computeJaccard(b1, b2):
@@ -87,5 +97,10 @@ def extractBigram(line):
   line = line[indx:]
   bigram = line
   return bigram
+
+def addToMatrix(simMatrix, docIndx1, docIndx2, jaccard):
+  simMatrix[docIndx1-1][docIndx2-1] = jaccard
+
+
 
 main()
