@@ -1,21 +1,12 @@
 import string
 import re
 import numpy
-import scipy
 import pprint
 from sets import Set
 
-
 allDics = {}
-
   
 def main():
-
-  # Read in fv 1
-  #b1 = ['after carnival','again seems','also light','although normal','also owns','been restored','carnival which','certificates view','come end','commission after']
-
-  # read in fv 2
-  #b2 = ['activities both','also owns','both companies','british petroleum','committee ','financial trading','inc said','investment activities','joint management','management committee']
 
   # Open outcopy2.txt and save as variable since it'll be used in several different ways
   inputFile = open("outcopy2.txt", "r")
@@ -51,9 +42,6 @@ def main():
       #print(b2)
       jaccard = computeJaccard(b1, b2)
       addToMatrix(simMatrix, eachDocID, i, jaccard)
-
-      # # # ADD TO MATRIX[EACHDOCID][I] THE JACCARD VALUE
-      # # # THEN 1 FOR MATRIX[EACHDOCID][EACHDOCID]
       
       print(jaccard)
       print('\n\n')
@@ -116,7 +104,6 @@ def addToMatrix(simMatrix, docIndx1, docIndx2, jaccard):
   simMatrix[docIndx1-1][docIndx2-1] = jaccard
 
 def meanSquareError(jaccardMatrix, minHashMatrix, mseMatrix, docID):
-
   # Outer loop iterates over rows
   for i in xrange(docID-1):
     # Inner loop iterates over columns
