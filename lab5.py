@@ -1,11 +1,13 @@
 import string
 import re
 import numpy
+import scipy
 import pprint
 from sets import Set
-from math import log10, floor
+
 
 allDics = {}
+
   
 def main():
 
@@ -28,6 +30,16 @@ def main():
 
   # Create the jaccard similiarity matrix.  Will be (#docs x #docs).
   simMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
+  mseMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
+  #minHashMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
+
+  minHashMatrix = [[1.0, 1.0, 0.0, 0.06, 0.02, 0.0, 0.0],
+ [0, 1.0, 0.0, 0.04, 0.0, 0.0, 0.003],
+ [0, 0, 1.0, 0.0, 0.0, 0.0, 0.0],
+ [0, 0, 0, 1.0, 0.11, 0.0, 0.0],
+ [0, 0, 0, 0, 1.0, 0.03, 0.0],
+ [0, 0, 0, 0, 0, 1.0, 0.0],
+ [0, 0, 0, 0, 0, 0, 1.0]]
 
   # iterate through all of the documents comparing each one to the others
   # Outer loop gets b1
@@ -50,6 +62,8 @@ def main():
   pp = pprint.PrettyPrinter(depth=7)
   pp.pprint(simMatrix)
 
+  meanSquareError(simMatrix, minHashMatrix, mseMatrix, docID)
+  pp.pprint(mseMatrix)
 
 def computeJaccard(b1, b2):
 
@@ -101,6 +115,17 @@ def extractBigram(line):
 def addToMatrix(simMatrix, docIndx1, docIndx2, jaccard):
   simMatrix[docIndx1-1][docIndx2-1] = jaccard
 
+def meanSquareError(jaccardMatrix, minHashMatrix, mseMatrix, docID):
+
+  # Outer loop iterates over rows
+  for i in xrange(docID-1):
+    # Inner loop iterates over columns
+    for l in xrange(docID-1):
+      # MSE takes in actual and predicted values as parameters
+      mse = numpy.mean(((minHashMatrix[i][l] - jaccardMatrix[i][l])**2))
+
+      # Add value to MSE Matrix
+      mseMatrix[i][l] = mse
 
 
 main()
