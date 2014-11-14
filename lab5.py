@@ -99,20 +99,25 @@ def minHash(inputMatrix, randoDics, numDocs, length, k):
   
   
   for ck in range(k):
+    # iterate over documents
     for d in range(numDocs-1):
       minTemp = bigPrimeNumber
       i = 0
+      # Iterate over each bigram in the particular document
       while i < length:
         if inputMatrix[i][d] == 1 :
           possMin = (randoDics[ck]['x']*i+randoDics[ck]['y']%bigPrimeNumber)%numDocs
           if possMin < minTemp:
             minTemp = possMin
         i += 1
+      # Add to the signature matrix the min hash value
       sigMatrix[ck][d] = minTemp
 
 
   pp.pprint(sigMatrix)
-    
+
+  # Insert similarity computation here
+      
 
 def computeJaccard(b1, b2):
 
