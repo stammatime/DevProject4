@@ -9,7 +9,7 @@ allDics = {}
 def main():
 
   # Open outcopy2.txt and save as variable since it'll be used in several different ways
-  inputFile = open("outcopy2.txt", "r")
+  inputFile = open("bigramOut.txt", "r")
 
   docID = 1
 
