@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 
 # out.arff becomes the input file for Weka.  It contains the transformed data
-o = open("out_short.arff", "w")
+o = open("out.txt", "w")
 topicList = []
 freqList = []
 wordSet = Set()
@@ -16,8 +16,9 @@ def classifier():
 
         # Iterate through each "line" in file
         # line = document in this environment
-        for line in open("outcopy.txt", "r"):
-                if not line == '\n':
+        for line in open("preprocess.txt", "r"):
+        		line = line.rstrip('\n \r')
+                	if len(line) > 0:
                 		processline_Bigram(line)
                         #processLine_WordFreq(line)
 
@@ -69,7 +70,7 @@ def classifier():
         # to put it into weka friendly format.
         transformInput(topicList, allArticles, allWordsList)"""
 
-        
+        """
         while True:
     		try:
         		topicList.remove('\n')
@@ -80,14 +81,24 @@ def classifier():
         		topicList.remove('')
     		except ValueError:
         		break        		
-
+"""
         #print topicList
-        print allBigrams
+        
+        #for x in range(10):
+        #	print (str(x) + ','.join(allBigrams[x]) + "\n")
+
+    
+#    	for docID in range(len(allBigrams)):
+#    		print (str(docID+1) + ','.join(allBigrams[docID]) + "\n")
+        	
+#    	for docID in range(len(topicList)):
+#    		print (str(docID+1) + ','.join(topicList[docID]) + "\n")
+        
         bigramOut = open("bigramOut.txt", "w")
         b = 0
         for bi in allBigrams:
-        	bigramOut.write(str(b)+" ")
-        	#bigramOut.write(topicList[b] + " ")
+        	bigramOut.write(str(b+1)+" ")
+        	bigramOut.write("<" + topicList[b] + "> ")
         	bigramOut.write("<" + ",".join(allBigrams[b])+ ">" + "\n")
 
 
@@ -172,11 +183,13 @@ def processBigram(x, line):
                         index = c
                         break
 
+        #beginning of bigram to end of bigram
         bigramList = line[(x+2):index]
+
         bigramList = bigramList.split(",")
 
-       	if bigramList[0] != "":
-        	allBigrams.append(bigramList)
+       	#if bigramList[0] != "":
+        allBigrams.append(bigramList)
         
         
 
