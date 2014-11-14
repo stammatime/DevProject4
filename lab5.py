@@ -2,6 +2,7 @@ import string
 import re
 import numpy
 import pprint
+import random
 from sets import Set
 
 allDics = {}
@@ -18,6 +19,12 @@ def main():
       allDics[docID] = { 'bigrams' : extractBigram(document)}
       docID += 1
     
+  # Dictionary of random numbers
+  k = 16
+  randoDics = []
+  for x in range(k):
+    randoDics.append({'x':random.random(), 'y':random.random()})
+  
 
   # Create the jaccard similiarity matrix.  Will be (#docs x #docs).
   simMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
@@ -39,19 +46,73 @@ def main():
     i = eachDocID
     while i < docID:
       b2 = allDics[i]['bigrams']
-      #print(b2)
       jaccard = computeJaccard(b1, b2)
       addToMatrix(simMatrix, eachDocID, i, jaccard)
       
-      print(jaccard)
-      print('\n\n')
+      #print(jaccard)
+      #print('\n\n')
       i += 1
 
-  pp = pprint.PrettyPrinter(depth=7)
-  pp.pprint(simMatrix)
 
+
+  # Create a set of unique strings that are the bigrams
+  bigramList = Set()
+  for eachDocID in allDics:
+    allDics[eachDocID]['bigrams'] = re.sub('[<]', '', re.sub('[>]', '', allDics[eachDocID]['bigrams'])).strip().split(',')
+    for bigrm in allDics[eachDocID]['bigrams']:
+      bigramList.add(bigrm)
+
+      
+  # Create the (bigram x Document) matrix
+  inputMatrix = []
+  for x in range(len(bigramList)):
+    inputMatrix.append([])
+
+
+  # Fill the matrix with 1s if bigram is present in document, 0 o.w.
+  bIndx = 0
+  for b in bigramList:
+    for did in allDics:
+      inputMatrix[bIndx].append(1 if b in allDics[did]['bigrams'] else 0)
+    bIndx += 1
+
+
+  # Calculate the MSE between our Jaccard matrix and the minhash matrix
   meanSquareError(simMatrix, minHashMatrix, mseMatrix, docID)
-  pp.pprint(mseMatrix)
+  minHash(inputMatrix, randoDics, docID, len(bigramList), k)
+
+  pp = pprint.PrettyPrinter(depth=7)
+  #pp.pprint(simMatrix)
+  #pp.pprint(inputMatrix)
+  #pp.pprint(mseMatrix)
+
+
+# Len = len(bigramList) = #bigrams
+def minHash(inputMatrix, randoDics, numDocs, length, k):
+  # Big prime number to mod by 
+  bigPrimeNumber = 22801760837
+  i = 0
+  
+  # Sig matrix
+  sigMatrix = [range(numDocs-1) for x in range(k)]
+  pp = pprint.PrettyPrinter(depth=80)
+  
+  
+  for ck in range(k):
+    for d in range(numDocs-1):
+      minTemp = bigPrimeNumber
+      i = 0
+      while i < length:
+        if inputMatrix[i][d] == 1 :
+          possMin = (randoDics[ck]['x']*i+randoDics[ck]['y']%bigPrimeNumber)%numDocs
+          if possMin < minTemp:
+            minTemp = possMin
+        i += 1
+      sigMatrix[ck][d] = minTemp
+
+
+  pp.pprint(sigMatrix)
+    
 
 def computeJaccard(b1, b2):
 
@@ -62,24 +123,25 @@ def computeJaccard(b1, b2):
   b2 = re.sub('[<]', '', re.sub('[>]', '', b2))
   b2 = b2.split(",")
   b2 = map(lambda x: x.strip(), b2)
-  print(b1)
-  print(b2)
+  #print(b1)
+  #print(b2)
   
   # get size of intersection
   intersect = set(b1).intersection(b2)
-  print(intersect)
+  #print(intersect)
   sizeIntersect = len(intersect)
-  print("intersection size = ", sizeIntersect)
+  #print("intersection size = ", sizeIntersect)
 
   # get size of union
   uni = set(b1).union(b2)
   sizeUnion = len(uni)
-  print("union size = ", sizeUnion)
+  #print("union size = ", sizeUnion)
 
   # divide sizeInt/sizeUnion
   jaccard = float(sizeIntersect)/sizeUnion
 
   return jaccard
+
 
 def extractBigram(line):
   # format of each doc should be <class label> <bigram vector>
