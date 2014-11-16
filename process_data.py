@@ -4,7 +4,6 @@ import re
 from collections import defaultdict
 
 # out.arff becomes the input file for Weka.  It contains the transformed data
-o = open("out.txt", "w")
 topicList = []
 freqList = []
 wordSet = Set()
@@ -40,7 +39,7 @@ def classifier():
         	b += 1
         print("Transform input end")
         bigramOut.close()
-        o.close()
+        
 
 def processline_Bigram(line):
         # first is doc id
