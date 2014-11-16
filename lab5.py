@@ -1,5 +1,6 @@
 import string
 import re
+import sys
 import numpy
 import pprint
 import random
@@ -14,33 +15,21 @@ def main():
 
   docID = 1
 
+  # Create a dictionary for the docID --> bigrams
   for document in inputFile:
     if not document == '\n':
       allDics[docID] = { 'bigrams' : extractBigram(document)}
       docID += 1
-    
-  # Dictionary of random numbers
-  k = 16
-  randoDics = []
-  for x in range(k):
-    randoDics.append({'x':random.random(), 'y':random.random()})
-  
 
+  # Value of K for k-minhash  
+  k = 16
+    
   # Create the jaccard similiarity matrix.  Will be (#docs x #docs).
   simMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
   mseMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
-  #minHashMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
 
-  minHashMatrix = [[1.0, 1.0, 0.0, 0.06, 0.02, 0.0, 0.0],
- [0, 1.0, 0.0, 0.04, 0.0, 0.0, 0.003],
- [0, 0, 1.0, 0.0, 0.0, 0.0, 0.0],
- [0, 0, 0, 1.0, 0.11, 0.0, 0.0],
- [0, 0, 0, 0, 1.0, 0.03, 0.0],
- [0, 0, 0, 0, 0, 1.0, 0.0],
- [0, 0, 0, 0, 0, 0, 1.0]]
 
-  # iterate through all of the documents comparing each one to the others
-  # Outer loop gets b1
+  # Iterate through all of the documents comparing each one to the others
   for eachDocID in allDics:
     b1 = allDics[eachDocID]['bigrams']
     i = eachDocID
@@ -48,11 +37,7 @@ def main():
       b2 = allDics[i]['bigrams']
       jaccard = computeJaccard(b1, b2)
       addToMatrix(simMatrix, eachDocID, i, jaccard)
-      
-      #print(jaccard)
-      #print('\n\n')
       i += 1
-
 
 
   # Create a set of unique strings that are the bigrams
@@ -77,46 +62,42 @@ def main():
     bIndx += 1
 
 
+  minHashMatrix = minHash(inputMatrix, k, docID)
+  
   # Calculate the MSE between our Jaccard matrix and the minhash matrix
-  meanSquareError(simMatrix, minHashMatrix, mseMatrix, docID)
-  minHash(inputMatrix, randoDics, docID, len(bigramList), k)
+  #meanSquareError(simMatrix, minHashMatrix, mseMatrix, docID)
 
-  pp = pprint.PrettyPrinter(depth=7)
-  #pp.pprint(simMatrix)
-  #pp.pprint(inputMatrix)
-  #pp.pprint(mseMatrix)
+  pp = pprint.PrettyPrinter(depth=docID)
+  pp.pprint(minHashMatrix)
 
 
 # Len = len(bigramList) = #bigrams
-def minHash(inputMatrix, randoDics, numDocs, length, k):
-  # Big prime number to mod by 
-  bigPrimeNumber = 22801760837
-  i = 0
-  
-  # Sig matrix
-  sigMatrix = [range(numDocs-1) for x in range(k)]
-  pp = pprint.PrettyPrinter(depth=80)
-  
-  
-  for ck in range(k):
-    # iterate over documents
-    for d in range(numDocs-1):
-      minTemp = bigPrimeNumber
-      i = 0
-      # Iterate over each bigram in the particular document
-      while i < length:
-        if inputMatrix[i][d] == 1 :
-          possMin = (randoDics[ck]['x']*i+randoDics[ck]['y']%bigPrimeNumber)%numDocs
-          if possMin < minTemp:
-            minTemp = possMin
-        i += 1
-      # Add to the signature matrix the min hash value
-      sigMatrix[ck][d] = minTemp
+def minHash(inputMatrix, k, numDocs):
 
+  # Num rows in the hash function will be the # rows in the input matrix
+  rows = len(inputMatrix)
+  # Cols is the number of columns in the input matrix, ie # docs
+  cols = len(inputMatrix[0])
+  sigRows = k
+  
+  
+  # Sig matrix initialize with series of max int
+  sigMatrix = []
+  for i in range(sigRows):
+    sigMatrix.append([sys.maxint] * cols)
+  
+  for r in range(rows):
+    # If value = 1, and signature > hash value, replace signature with hash value
+    # According to the k-minhash algorithm.
+    for c in range(cols):
+        if inputMatrix[r][c] == 0:
+            continue
+        for i in range(sigRows):
+            hashvalue = (random.random()*r+random.random()%sys.maxint)%numDocs
+            if sigMatrix[i][c] > hashvalue:
+                sigMatrix[i][c] = round(hashvalue, 2)
 
-  pp.pprint(sigMatrix)
-
-  # Insert similarity computation here
+  return sigMatrix
       
 
 def computeJaccard(b1, b2):
