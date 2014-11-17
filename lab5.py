@@ -11,7 +11,7 @@ allDics = {}
 def main():
 
   # Open outcopy2.txt and save as variable since it'll be used in several different ways
-  inputFile = open("bigramOut.txt", "r")
+  inputFile = open("outcopy2.txt", "r")
 
   docID = 1
 
@@ -62,43 +62,43 @@ def main():
     bIndx += 1
 
 
-  minHashMatrix = minHash(inputMatrix, k, docID)
-  
-  # Calculate the MSE between our Jaccard matrix and the minhash matrix
-  #meanSquareError(simMatrix, minHashMatrix, mseMatrix, docID)
+  sigMatrix = hashIt(inputMatrix, docID, k)
+  jaccardEstimate = sigJaccard(sigMatrix, k)
+  meanSquareError(simMatrix, jaccardEstimate, mseMatrix, docID)
+
 
   pp = pprint.PrettyPrinter(depth=docID)
-  pp.pprint(minHashMatrix)
+  pp.pprint(mseMatrix)
 
 
-# Len = len(bigramList) = #bigrams
-def minHash(inputMatrix, k, numDocs):
 
-  # Num rows in the hash function will be the # rows in the input matrix
+def hashIt(inputMatrix, numDocs, k):
+  p = 32416188517  
   rows = len(inputMatrix)
-  # Cols is the number of columns in the input matrix, ie # docs
   cols = len(inputMatrix[0])
-  sigRows = k
-  
-  
-  # Sig matrix initialize with series of max int
-  sigMatrix = []
-  for i in range(sigRows):
-    sigMatrix.append([sys.maxint] * cols)
-  
-  for r in range(rows):
-    # If value = 1, and signature > hash value, replace signature with hash value
-    # According to the k-minhash algorithm.
-    for c in range(cols):
-        if inputMatrix[r][c] == 0:
-            continue
-        for i in range(sigRows):
-            hashvalue = (random.random()*r+random.random()%sys.maxint)%numDocs
-            if sigMatrix[i][c] > hashvalue:
-                sigMatrix[i][c] = round(hashvalue, 2)
 
+  sigMatrix = []
+  for i in range(k):
+    sigMatrix.append([sys.maxint] * cols)
+
+  for perm in range(k):
+    a = round((random.random())*10**18, 0)
+    b = round((random.random())*10**15, 0)
+    for c in range(cols):
+      minSig = p
+      for r in range(rows):
+        if inputMatrix[r][c] == 1:
+          # value = ((index of '1')*a + b)%p%N
+          value = (r*a+b)%p%numDocs
+          # Update minhash-signature value
+          if minSig > value:
+            minSig = value
+      sigMatrix[perm][c] = int(minSig)
+
+  pp = pprint.PrettyPrinter()
+  # pp.pprint(sigMatrix)
   return sigMatrix
-      
+    
 
 def computeJaccard(b1, b2):
 
@@ -109,25 +109,35 @@ def computeJaccard(b1, b2):
   b2 = re.sub('[<]', '', re.sub('[>]', '', b2))
   b2 = b2.split(",")
   b2 = map(lambda x: x.strip(), b2)
-  #print(b1)
-  #print(b2)
   
   # get size of intersection
   intersect = set(b1).intersection(b2)
-  #print(intersect)
   sizeIntersect = len(intersect)
-  #print("intersection size = ", sizeIntersect)
 
   # get size of union
   uni = set(b1).union(b2)
   sizeUnion = len(uni)
-  #print("union size = ", sizeUnion)
 
   # divide sizeInt/sizeUnion
   jaccard = float(sizeIntersect)/sizeUnion
 
   return jaccard
 
+def sigJaccard(sigMatrix, k):
+  cols = len(sigMatrix[0])
+  rows = len(sigMatrix)
+  estJaccard = [[0 for x in xrange(cols)] for x in xrange(cols)]
+
+  for c in range(cols):
+    for x in range(c, cols):
+      intersect = 0
+      for r in range(rows):
+        if sigMatrix[r][c] == sigMatrix[r][x]:
+          intersect += 1
+      union = (k*2)-intersect
+      estJaccard[c][x] = round((float(intersect)/union), 2)
+
+  return estJaccard
 
 def extractBigram(line):
   # format of each doc should be <class label> <bigram vector>
@@ -160,7 +170,6 @@ def meanSquareError(jaccardMatrix, minHashMatrix, mseMatrix, docID):
       mse = numpy.mean(((minHashMatrix[i][l] - jaccardMatrix[i][l])**2))
 
       # Add value to MSE Matrix
-      mseMatrix[i][l] = mse
-
+      mseMatrix[i][l] = round(mse, 3)
 
 main()
