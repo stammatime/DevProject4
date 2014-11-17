@@ -22,7 +22,7 @@ def main():
       docID += 1
 
   # Value of K for k-minhash  
-  k = 16
+  k = 32
     
   # Create the jaccard similiarity matrix.  Will be (#docs x #docs).
   simMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
@@ -68,8 +68,9 @@ def main():
 
 
   pp = pprint.PrettyPrinter(depth=docID)
-  pp.pprint(mseMatrix)
-
+  #pp.pprint(simMatrix)
+  #pp.pprint(jaccardEstimate)
+  #pp.pprint(sigMatrix)
 
 
 def hashIt(inputMatrix, numDocs, k):
@@ -120,7 +121,6 @@ def computeJaccard(b1, b2):
 
   # divide sizeInt/sizeUnion
   jaccard = float(sizeIntersect)/sizeUnion
-
   return jaccard
 
 def sigJaccard(sigMatrix, k):
@@ -135,7 +135,7 @@ def sigJaccard(sigMatrix, k):
         if sigMatrix[r][c] == sigMatrix[r][x]:
           intersect += 1
       union = (k*2)-intersect
-      estJaccard[c][x] = round((float(intersect)/union), 2)
+      estJaccard[c][x] = round((float(intersect)/union), 3)
 
   return estJaccard
 
@@ -163,13 +163,19 @@ def addToMatrix(simMatrix, docIndx1, docIndx2, jaccard):
 
 def meanSquareError(jaccardMatrix, minHashMatrix, mseMatrix, docID):
   # Outer loop iterates over rows
+  numsum = 0
+  count = 0
   for i in xrange(docID-1):
     # Inner loop iterates over columns
     for l in xrange(docID-1):
       # MSE takes in actual and predicted values as parameters
-      mse = numpy.mean(((minHashMatrix[i][l] - jaccardMatrix[i][l])**2))
+      numsum += (minHashMatrix[i][l] - jaccardMatrix[i][l])**2
+      count += 1
+      
 
-      # Add value to MSE Matrix
-      mseMatrix[i][l] = round(mse, 3)
+  # Add value to MSE Matrix
+  #mseMatrix[i][l] = round(mse, 3)
+  mse = numsum/docID
+  print(mse)
 
 main()
