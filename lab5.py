@@ -4,6 +4,7 @@ import sys
 import numpy
 import pprint
 import random
+import time
 from sets import Set
 
 allDics = {}
@@ -22,7 +23,10 @@ def main():
       docID += 1
 
   # Value of K for k-minhash  
-  k = 32
+  #k = int(sys.argv[1])
+  #print "k = " + str(k) + "\n"
+  #print "K = " + str(k)
+
     
   # Create the jaccard similiarity matrix.  Will be (#docs x #docs).
   simMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
@@ -61,10 +65,17 @@ def main():
       inputMatrix[bIndx].append(1 if b in allDics[did]['bigrams'] else 0)
     bIndx += 1
 
-
-  sigMatrix = hashIt(inputMatrix, docID, k)
-  jaccardEstimate = sigJaccard(sigMatrix, k)
-  meanSquareError(simMatrix, jaccardEstimate, mseMatrix, docID)
+  k = 16
+  print
+  while k <= 128:
+    print "k = " + str(k)
+    start = time.time()
+    sigMatrix = hashIt(inputMatrix, docID, k)
+    jaccardEstimate = sigJaccard(sigMatrix, k)
+    meanSquareError(simMatrix, jaccardEstimate, mseMatrix, docID)
+    end = time.time()
+    print "Seconds to complete: " + str(end - start) + "\n"
+    k = k*2
 
 
   pp = pprint.PrettyPrinter(depth=docID)
@@ -176,6 +187,6 @@ def meanSquareError(jaccardMatrix, minHashMatrix, mseMatrix, docID):
   # Add value to MSE Matrix
   #mseMatrix[i][l] = round(mse, 3)
   mse = numsum/docID
-  print(mse)
+  print "MSE = " + str(mse)
 
 main()
