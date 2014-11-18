@@ -22,16 +22,9 @@ def main():
       allDics[docID] = { 'bigrams' : extractBigram(document)}
       docID += 1
 
-  # Value of K for k-minhash  
-  #k = int(sys.argv[1])
-  #print "k = " + str(k) + "\n"
-  #print "K = " + str(k)
-
     
   # Create the jaccard similiarity matrix.  Will be (#docs x #docs).
   simMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
-  mseMatrix = [[0 for x in xrange(docID-1)] for x in xrange(docID-1)]
-
 
   # Iterate through all of the documents comparing each one to the others
   for eachDocID in allDics:
@@ -72,7 +65,7 @@ def main():
     start = time.time()
     sigMatrix = hashIt(inputMatrix, docID, k)
     jaccardEstimate = sigJaccard(sigMatrix, k)
-    meanSquareError(simMatrix, jaccardEstimate, mseMatrix, docID)
+    meanSquareError(simMatrix, jaccardEstimate, docID)
     end = time.time()
     print "Seconds to complete: " + str(end - start) + "\n"
     k = k*2
@@ -172,7 +165,7 @@ def extractBigram(line):
 def addToMatrix(simMatrix, docIndx1, docIndx2, jaccard):
   simMatrix[docIndx1-1][docIndx2-1] = jaccard
 
-def meanSquareError(jaccardMatrix, minHashMatrix, mseMatrix, docID):
+def meanSquareError(jaccardMatrix, minHashMatrix, docID):
   # Outer loop iterates over rows
   numsum = 0
   count = 0
@@ -183,9 +176,6 @@ def meanSquareError(jaccardMatrix, minHashMatrix, mseMatrix, docID):
       numsum += (minHashMatrix[i][l] - jaccardMatrix[i][l])**2
       count += 1
       
-
-  # Add value to MSE Matrix
-  #mseMatrix[i][l] = round(mse, 3)
   mse = numsum/docID
   print "MSE = " + str(mse)
 
